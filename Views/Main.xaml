@@ -21,9 +21,8 @@
         <TextBox x:Name="descriptionTextBox" HorizontalAlignment="Left" Margin="70,287,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="320" Background="#FFABADB3"/>
         <Label Content="Kategorie" HorizontalAlignment="Left" Margin="70,310,0,0" VerticalAlignment="Top" Foreground="#FFFFF5F5" FontSize="24" RenderTransformOrigin="0.445,-0.464"/>
         <Label Content="Datum" HorizontalAlignment="Left" Margin="70,0,0,0" VerticalAlignment="Center" Foreground="#FFFFF5F5" FontSize="24" RenderTransformOrigin="0.445,-0.464"/>
-        <ComboBox x:Name="categoryComboBox1" HorizontalAlignment="Left" Margin="70,357,0,0" VerticalAlignment="Top" Width="120"/>
+        <ComboBox x:Name="categoryComboBox1" HorizontalAlignment="Left" Margin="70,357,0,0" VerticalAlignment="Top" Width="120" DisplayMemberPath="Name" SelectedValuePath="Id"/>
         <Calendar x:Name="datePicker" HorizontalAlignment="Left" Margin="70,438,0,0" VerticalAlignment="Top" Height="160" Width="184"/>
-        <TextBox x:Name="timePickerTextBox" HorizontalAlignment="Left" Margin="342,441,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Background="#FFABADB3" Text="14:50"/>
         <Label Content="Label" HorizontalAlignment="Left" Margin="683,180,0,0" VerticalAlignment="Top" Background="#FFADA8A8" Width="2" Height="521" RenderTransformOrigin="0.5,0.5">
             <Label.RenderTransform>
                 <TransformGroup>
@@ -34,13 +33,11 @@
                 </TransformGroup>
             </Label.RenderTransform>
         </Label>
-        <Label Content="Čas" HorizontalAlignment="Left" Margin="342,399,0,0" VerticalAlignment="Top" Foreground="#FFFFF5F5" FontSize="24" RenderTransformOrigin="0.445,-0.464"/>
-        <CheckBox x:Name="checkBoxReminder" Content="Připomenutí" HorizontalAlignment="Left" Margin="535,449,0,0" VerticalAlignment="Top" Background="#FFABADB3" Foreground="#FFFFFEFE" FontSize="16"/>
-        <Label Content="Zapnout připomínku" HorizontalAlignment="Left" Margin="493,390,0,0" VerticalAlignment="Top" Foreground="#FFFFF5F5" FontSize="20" RenderTransformOrigin="0.445,-0.464"/>
-        <Button x:Name="newButton" Content="Nový" HorizontalAlignment="Left" Margin="70,770,0,0" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="editButton" Content="Upravit" HorizontalAlignment="Left" Margin="230,770,0,0" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="deleteButton" Content="Vymazat" HorizontalAlignment="Left" Margin="402,770,0,0" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="saveButton" Content="Uložit" HorizontalAlignment="Left" Margin="564,770,0,0" VerticalAlignment="Top" Width="120"/>
+        <Label Content="Nastavit připomínku" HorizontalAlignment="Left" Margin="70,648,0,0" VerticalAlignment="Top" Foreground="#FFFFF5F5" FontSize="20" RenderTransformOrigin="0.445,-0.464"/>
+        <Button x:Name="newButton" Content="Nový" HorizontalAlignment="Left" Margin="70,770,0,0" VerticalAlignment="Top" Width="120" Click="newButton_Click"/>
+        <Button x:Name="editButton" Content="Upravit" HorizontalAlignment="Left" Margin="230,770,0,0" VerticalAlignment="Top" Width="120" Click="editButton_Click"/>
+        <Button x:Name="deleteButton" Content="Vymazat" HorizontalAlignment="Left" Margin="402,770,0,0" VerticalAlignment="Top" Width="120" Click="deleteButton_Click"/>
+        <Button x:Name="saveButton" Content="Uložit" HorizontalAlignment="Left" Margin="564,770,0,0" VerticalAlignment="Top" Width="120" Click="saveButton_Click"/>
         <DataGrid x:Name="todoListGridView" Margin="730,231,50,65" AutoGenerateColumns="False"
                   ItemsSource="{Binding ToDoList}">
             <DataGrid.Background>
@@ -50,10 +47,12 @@
                 <DataGridTextColumn Header="Název" Binding="{Binding Title}" />
                 <DataGridTextColumn Header="Popis" Binding="{Binding Description}" />
                 <DataGridTextColumn Header="Datum splnění" Binding="{Binding DueDate}" />
-                <DataGridTextColumn Header="Kategorie" Binding="{Binding Category}" />
+                <DataGridTextColumn Header="Kategorie" Binding="{Binding Category_id}" />
+                <DataGridTextColumn Header="Stav" Binding="{Binding IsCompleted}" />
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" Visibility="Hidden" />
             </DataGrid.Columns>
         </DataGrid>
+        <Button x:Name="reminderButton" Content="Připomínka" HorizontalAlignment="Left" Margin="130,703,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.101,0.127" Width="75" Click="reminderButton_Click"/>
 
     </Grid>
 </Window>

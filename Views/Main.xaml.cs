@@ -26,7 +26,7 @@ namespace ToDoList2.Views
 
 
         private ObservableCollection<ToDoItems> todoList;
-        private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList\\ToDoList\\ToDoList\\todoList.db";
+        private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
         private string customFormat = "dd.MM.yyyy HH:mm";
         public Main()
         {
@@ -39,6 +39,10 @@ namespace ToDoList2.Views
 
         public void MainWindow_Load(object sender, EventArgs e)
         {
+            List<Categories> categories = LoadCategoriesFromDatabase();
+            List<string> categoryNames = categories.Select(category => category.Name).ToList();
+            categoryComboBox1.ItemsSource = categories;
+            categoryComboBox1.SelectedIndex = 3;
             todoListGridView.ItemsSource = todoList;
 
             SQLiteConnection connection = new SQLiteConnection(connectionString);
@@ -55,22 +59,56 @@ namespace ToDoList2.Views
                         string description = reader["description"].ToString();
                         DateTime dueDate = Convert.ToDateTime(reader["due_date"]);
                         int categoryId = Convert.ToInt32(reader["category_id"]);
+                        int status = Convert.ToInt32(reader["is_completed"]);
+                        int category = Convert.ToInt32(reader["category_id"]);
                         int id = Convert.ToInt32(reader["id"]);
                         string categoryTitle = GetCategoryNameById(categoryId);
 
-                        // Přidejte data do datového zdroje (todoList)
                         todoList.Add(new ToDoItems
                         {
                             Title = title,
                             Description = description,
                             DueDate = dueDate,
-                            //Category = categoryTitle,
+                            IsCompleted = status,
+                            Category_id = category,
                             Id = id
                         });
                     }
                 }
+
             }
 
+        }
+
+        private List<Categories> LoadCategoriesFromDatabase()
+        {
+            List<Categories> categories = new List<Categories>();
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string selectCategoriesQuery = "SELECT * FROM Categories";
+                using (SQLiteCommand selectCategoriesCommand = new SQLiteCommand(selectCategoriesQuery, connection))
+                {
+                    using (SQLiteDataReader reader = selectCategoriesCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int categoryId = Convert.ToInt32(reader["id"]);
+                            string categoryName = reader["Name"].ToString();
+
+                            categories.Add(new Categories
+                            {
+                                Id = categoryId,
+                                Name = categoryName
+                            });
+                        }
+                    }
+                }
+            }
+
+            return categories;
         }
 
         private string GetCategoryNameById(int categoryId)
@@ -95,6 +133,197 @@ namespace ToDoList2.Views
             }
 
             return categoryName;
+        }
+        private void deleteButton_Click(object sender, RoutedEventArgs e)
+        {
+
+            ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+
+
+            if (selectedTask != null)
+            {
+                todoList.Remove(selectedTask);
+
+                DeleteTaskFromDatabase(selectedTask.Id);
+            }
+            else
+            {
+                MessageBox.Show("Vyberte položku");
+            }
+        }
+
+        private void DeleteTaskFromDatabase(int taskId)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string deleteTaskQuery = "DELETE FROM Tasks WHERE id = @taskId";
+                using (SQLiteCommand deleteTaskCommand = new SQLiteCommand(deleteTaskQuery, connection))
+                {
+                    deleteTaskCommand.Parameters.AddWithValue("@taskId", taskId);
+                    deleteTaskCommand.ExecuteNonQuery();
+                    RefreshData();
+                }
+            }
+        }
+
+        private void editButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+
+            if (selectedTask != null)
+            {
+                titleTextBox.Text = selectedTask.Title;
+                descriptionTextBox.Text = selectedTask.Description;
+                categoryComboBox1.ItemsSource = LoadCategoriesFromDatabase();
+                categoryComboBox1.SelectedItem = categoryComboBox1.Items.OfType<Categories>().FirstOrDefault(category => category.Id == selectedTask.Category_id);
+
+
+            }
+            else
+            {
+                MessageBox.Show("Vyberte položku k editování");
+            }
+        }
+
+        private void reminderButton_Click(object sender, RoutedEventArgs e)
+        {
+            ReminderWindow reminderWindow = new ReminderWindow();
+            reminderWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            reminderWindow.Show();
+        }
+
+        private void saveButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+
+            if (string.IsNullOrWhiteSpace(titleTextBox.Text) || string.IsNullOrWhiteSpace(descriptionTextBox.Text) || datePicker.SelectedDate == null || categoryComboBox1.SelectedItem == null)
+            {
+                MessageBox.Show("Please fill in all required fields.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (selectedTask != null)
+            {
+                selectedTask.Title = titleTextBox.Text;
+                selectedTask.Description = descriptionTextBox.Text;
+                selectedTask.Category_id = ((Categories)categoryComboBox1.SelectedItem).Id;
+                selectedTask.DueDate = datePicker.SelectedDate;
+
+                UpdateTaskInDatabase(selectedTask);
+                RefreshData();
+            }
+            else
+            {
+                ToDoItems newTask = new ToDoItems
+                {
+                    Title = titleTextBox.Text,
+                    Description = descriptionTextBox.Text,
+                    DueDate = datePicker.SelectedDate,
+                    IsCompleted = 0,
+                    Category_id = ((Categories)categoryComboBox1.SelectedItem).Id
+                };
+
+                todoList.Add(newTask);
+                InsertTaskToDatabase(newTask);
+                RefreshData();
+            }
+        }
+
+        private void UpdateTaskInDatabase(ToDoItems task)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string updateTaskQuery = "UPDATE Tasks SET title = @title, description = @description, " +
+                                         "due_date = @dueDate, category_id = @categoryId, is_completed = @isCompleted " +
+                                         "WHERE id = @taskId";
+                using (SQLiteCommand updateTaskCommand = new SQLiteCommand(updateTaskQuery, connection))
+                {
+                    updateTaskCommand.Parameters.AddWithValue("@title", task.Title);
+                    updateTaskCommand.Parameters.AddWithValue("@description", task.Description);
+                    updateTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
+                    updateTaskCommand.Parameters.AddWithValue("@categoryId", task.Category_id);
+                    updateTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
+                    updateTaskCommand.Parameters.AddWithValue("@taskId", task.Id);
+
+                    updateTaskCommand.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void InsertTaskToDatabase(ToDoItems task)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string insertTaskQuery = "INSERT INTO Tasks (title, description, due_date, category_id, is_completed) " +
+                                        "VALUES (@title, @description, @dueDate, @categoryId, @isCompleted)";
+                using (SQLiteCommand insertTaskCommand = new SQLiteCommand(insertTaskQuery, connection))
+                {
+                    insertTaskCommand.Parameters.AddWithValue("@title", task.Title);
+                    insertTaskCommand.Parameters.AddWithValue("@description", task.Description);
+                    insertTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
+                    insertTaskCommand.Parameters.AddWithValue("@categoryId", task.Category_id);
+                    insertTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
+
+                    insertTaskCommand.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void RefreshData()
+        {
+            todoList.Clear();
+
+            titleTextBox.Text = "";
+            descriptionTextBox.Text = "";
+            datePicker.SelectedDate = DateTime.Today;
+            categoryComboBox1.SelectedItem = null;
+
+            List<Categories> categories = LoadCategoriesFromDatabase();
+            List<string> categoryNames = categories.Select(category => category.Name).ToList();
+            categoryComboBox1.ItemsSource = categories;
+            categoryComboBox1.SelectedIndex = 3;
+
+            SQLiteConnection connection = new SQLiteConnection(connectionString);
+            connection.Open();
+
+            string selectTasksQuery = "SELECT * FROM Tasks";
+            using (SQLiteCommand selectTasksCommand = new SQLiteCommand(selectTasksQuery, connection))
+            {
+                using (SQLiteDataReader reader = selectTasksCommand.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string title = reader["title"].ToString();
+                        string description = reader["description"].ToString();
+                        DateTime dueDate = Convert.ToDateTime(reader["due_date"]);
+                        int categoryId = Convert.ToInt32(reader["category_id"]);
+                        int status = Convert.ToInt32(reader["is_completed"]);
+                        int category = Convert.ToInt32(reader["category_id"]);
+                        int id = Convert.ToInt32(reader["id"]);
+                        string categoryTitle = GetCategoryNameById(categoryId);
+
+                        todoList.Add(new ToDoItems
+                        {
+                            Title = title,
+                            Description = description,
+                            DueDate = dueDate,
+                            IsCompleted = status,
+                            Category_id = category,
+                            Id = id
+                        });
+                    }
+                }
+            }
+        }
+        private void newButton_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshData();
         }
 
     }
