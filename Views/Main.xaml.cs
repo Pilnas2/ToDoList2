@@ -59,9 +59,10 @@ namespace ToDoList2.Views
                         DateTime dueDate = Convert.ToDateTime(reader["due_date"]);
                         int categoryId = Convert.ToInt32(reader["category_id"]);
                         int status = Convert.ToInt32(reader["is_completed"]);
-                        int category = Convert.ToInt32(reader["category_id"]);
+                        int reminderId = Convert.ToInt32(reader["reminder_id"]);
                         int id = Convert.ToInt32(reader["id"]);
                         string categoryTitle = GetCategoryNameById(categoryId);
+                        string reminderDateTime = GetReminderDateTimeById(reminderId);
 
                         todoList.Add(new ToDoItems
                         {
@@ -69,8 +70,11 @@ namespace ToDoList2.Views
                             Description = description,
                             DueDate = dueDate,
                             IsCompleted = status,
-                            CategoryId = category,
-                            Id = id
+                            CategoryId = categoryId,
+                            ReminderId = reminderId,
+                            Id = id,
+                            CategoryName = categoryTitle,
+                            ReminderName = reminderDateTime
                         });
                     }
                 }
@@ -131,6 +135,29 @@ namespace ToDoList2.Views
 
             return categoryName;
         }
+        private string GetReminderDateTimeById(int reminderId)
+        {
+            string reminderDateTime = null;
+            string selectReminderQuery = "SELECT reminder_date_time FROM reminders WHERE id = @reminderId";
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                using (SQLiteCommand selectReminderCommand = new SQLiteCommand(selectReminderQuery, connection))
+                {
+                    selectReminderCommand.Parameters.AddWithValue("@reminderId", reminderId);
+                    object result = selectReminderCommand.ExecuteScalar();
+
+                    if (result != null && result != DBNull.Value)
+                    {
+                        reminderDateTime = result.ToString();
+                    }
+                }
+            }
+
+            return reminderDateTime;
+        }
         private void deleteButton_Click(object sender, RoutedEventArgs e)
         {
 
@@ -141,7 +168,7 @@ namespace ToDoList2.Views
             {
                 todoList.Remove(selectedTask);
 
-                DeleteTaskFromDatabase(selectedTask.Id);
+                DeleteTaskFromDatabase(selectedTask.Id, selectedTask.ReminderId);
             }
             else
             {
@@ -149,7 +176,7 @@ namespace ToDoList2.Views
             }
         }
 
-        private void DeleteTaskFromDatabase(int taskId)
+        private void DeleteTaskFromDatabase(int taskId, int reminderId)
         {
             using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
@@ -162,6 +189,14 @@ namespace ToDoList2.Views
                     deleteTaskCommand.ExecuteNonQuery();
                     RefreshData();
                 }
+                string deleteReminderQuery = "DELETE FROM Reminders WHERE id = @reminderId";
+                using (SQLiteCommand deleteReminderCommand = new SQLiteCommand(deleteReminderQuery, connection))
+                {
+                    deleteReminderCommand.Parameters.AddWithValue("@reminderId", reminderId);
+                    deleteReminderCommand.ExecuteNonQuery();
+                }
+
+                RefreshData();
             }
         }
 
@@ -201,33 +236,38 @@ namespace ToDoList2.Views
                 return;
             }
 
+
             if (selectedTask != null)
             {
                 selectedTask.Title = titleTextBox.Text;
                 selectedTask.Description = descriptionTextBox.Text;
                 selectedTask.CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id;
                 selectedTask.DueDate = datePicker.SelectedDate;
-
-                // Pass the ReminderId to the InsertTaskToDatabase method
                 selectedTask.ReminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
+
 
                 UpdateTaskInDatabase(selectedTask);
                 RefreshData();
             }
             else
             {
+                int reminderId = 0;
+                if (selectedDateTimeFromReminders != default(DateTime))
+                {
+                    reminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
+                }
                 ToDoItems newTask = new ToDoItems
                 {
                     Title = titleTextBox.Text,
                     Description = descriptionTextBox.Text,
                     DueDate = datePicker.SelectedDate,
                     IsCompleted = 0,
-                    CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id
+                    CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id,
+                    ReminderId = reminderId,
                 };
 
                 todoList.Add(newTask);
 
-                // Pass the ReminderId to the InsertTaskToDatabase method
                 newTask.ReminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
 
                 InsertTaskToDatabase(newTask);
@@ -249,7 +289,6 @@ namespace ToDoList2.Views
                 {
                     insertReminderCommand.Parameters.AddWithValue("@reminderDateTime", reminderDateTime);
 
-                    // Return the last inserted reminder ID
                     return Convert.ToInt32(insertReminderCommand.ExecuteScalar());
                 }
             }
@@ -294,9 +333,8 @@ namespace ToDoList2.Views
                     insertTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
                     insertTaskCommand.Parameters.AddWithValue("@categoryId", task.CategoryId);
                     insertTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
-                    insertTaskCommand.Parameters.AddWithValue("@reminderId", task.ReminderId); // Add this line
+                    insertTaskCommand.Parameters.AddWithValue("@reminderId", task.ReminderId);
 
-                    // Execute the query and get the last inserted row ID
                     lastInsertedTaskId = Convert.ToInt32(insertTaskCommand.ExecuteScalar());
                 }
             }
@@ -332,9 +370,10 @@ namespace ToDoList2.Views
                         DateTime dueDate = Convert.ToDateTime(reader["due_date"]);
                         int categoryId = Convert.ToInt32(reader["category_id"]);
                         int status = Convert.ToInt32(reader["is_completed"]);
-                        int category = Convert.ToInt32(reader["category_id"]);
+                        int reminderId = Convert.ToInt32(reader["reminder_id"]);
                         int id = Convert.ToInt32(reader["id"]);
                         string categoryTitle = GetCategoryNameById(categoryId);
+                        string reminderDateTime = GetReminderDateTimeById(reminderId);
 
                         todoList.Add(new ToDoItems
                         {
@@ -342,8 +381,11 @@ namespace ToDoList2.Views
                             Description = description,
                             DueDate = dueDate,
                             IsCompleted = status,
-                            CategoryId = category,
-                            Id = id
+                            CategoryId = categoryId,
+                            ReminderId = reminderId,
+                            Id = id,
+                            CategoryName = categoryTitle,
+                            ReminderName = reminderDateTime
                         });
                     }
                 }

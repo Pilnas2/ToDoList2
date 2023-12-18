@@ -46,11 +46,13 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Název" Binding="{Binding Title}" />
                 <DataGridTextColumn Header="Popis" Binding="{Binding Description}" />
-                <DataGridTextColumn Header="Datum splnění" Binding="{Binding DueDate}" />
-                <DataGridTextColumn Header="Kategorie" Binding="{Binding CategoryId}" />
-                <DataGridTextColumn Header="Kategorie název" Binding="{Binding Category.Name}" />
-                <DataGridTextColumn Header="Stav" Binding="{Binding IsCompleted}" />
-                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Visibility="Hidden" />
+                <DataGridTextColumn Header="Datum splnění" Binding="{Binding DueDate, StringFormat={}{0:dd.MM.yyyy}}" />
+                <DataGridTextColumn Header="Kategorie" Binding="{Binding CategoryId}" Visibility="Hidden" />
+                <DataGridTextColumn Header="Kategorie" Binding="{Binding CategoryName}" />
+                <DataGridCheckBoxColumn Header="Stav" Binding="{Binding IsCompleted}" />
+                <DataGridTextColumn Header="Id připomínky" Binding="{Binding ReminderId}" />
+                <DataGridTextColumn Header="Čas připomenutí" Binding="{Binding ReminderName}" />
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Visibility="Hidden"/>
             </DataGrid.Columns>
         </DataGrid>
         <Button x:Name="reminderButton" Content="Připomínka" HorizontalAlignment="Left" Margin="130,703,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.101,0.127" Width="75" Click="reminderButton_Click"/>

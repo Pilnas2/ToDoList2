@@ -88,10 +88,6 @@ namespace ToDoList2.Views
         {
             SelectedDateTimeChanged?.Invoke(this, selectedDateTime);
         }
-        public string GetData()
-        {
-            return SelectedDateTime;
-        }
 
     }
 }

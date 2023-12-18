@@ -16,5 +16,8 @@ namespace ToDoList2.Model
         public int IsCompleted { get; set; }
         public int ReminderId { get; set; }
 
+        public string CategoryName { get; set; }
+        public string ReminderName { get; set; }
+
     }
 }
