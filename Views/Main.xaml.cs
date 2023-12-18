@@ -193,8 +193,7 @@ namespace ToDoList2.Views
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
             ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
-            ReminderWindow reminderWindow = new ReminderWindow();
-            DateTime datum = selectedDateTimeFromReminders;
+
 
             if (string.IsNullOrWhiteSpace(titleTextBox.Text) || string.IsNullOrWhiteSpace(descriptionTextBox.Text) || datePicker.SelectedDate == null || categoryComboBox1.SelectedItem == null)
             {
@@ -208,7 +207,9 @@ namespace ToDoList2.Views
                 selectedTask.Description = descriptionTextBox.Text;
                 selectedTask.CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id;
                 selectedTask.DueDate = datePicker.SelectedDate;
-                //reminderWindow.reminderDatePicker = reminderDatePicker.SelectedDate;
+
+                // Pass the ReminderId to the InsertTaskToDatabase method
+                selectedTask.ReminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
 
                 UpdateTaskInDatabase(selectedTask);
                 RefreshData();
@@ -225,35 +226,34 @@ namespace ToDoList2.Views
                 };
 
                 todoList.Add(newTask);
+
+                // Pass the ReminderId to the InsertTaskToDatabase method
+                newTask.ReminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
+
                 InsertTaskToDatabase(newTask);
-                //if (selectedDateTimeFromReminders != default(DateTime))
-                //{
-                //    InsertReminderToDatabase(lastInsertedTaskId, selectedDateTimeFromReminders);
-                //}
                 RefreshData();
             }
         }
-        private void InsertReminderToDatabase(DateTime reminderDateTime)
+
+        private int InsertReminderToDatabase(DateTime reminderDateTime)
         {
             using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
                 string insertReminderQuery = "INSERT INTO Reminders (reminder_date_time) " +
-                                             "VALUES (@reminderDateTime);";
+                                             "VALUES (@reminderDateTime); " +
+                                             "SELECT last_insert_rowid();";
 
                 using (SQLiteCommand insertReminderCommand = new SQLiteCommand(insertReminderQuery, connection))
                 {
                     insertReminderCommand.Parameters.AddWithValue("@reminderDateTime", reminderDateTime);
 
-                    insertReminderCommand.ExecuteNonQuery();
+                    // Return the last inserted reminder ID
+                    return Convert.ToInt32(insertReminderCommand.ExecuteScalar());
                 }
-
-                // Get the last inserted reminder ID
-                //lastInsertedReminderId = GetLastInsertedReminderId();
             }
         }
-
         private void UpdateTaskInDatabase(ToDoItems task)
         {
             using (SQLiteConnection connection = new SQLiteConnection(connectionString))
@@ -294,33 +294,12 @@ namespace ToDoList2.Views
                     insertTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
                     insertTaskCommand.Parameters.AddWithValue("@categoryId", task.CategoryId);
                     insertTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
-
-                    // Assuming you have a variable for reminderId
-                    insertTaskCommand.Parameters.AddWithValue("@reminderId", task.ReminderId);
+                    insertTaskCommand.Parameters.AddWithValue("@reminderId", task.ReminderId); // Add this line
 
                     // Execute the query and get the last inserted row ID
                     lastInsertedTaskId = Convert.ToInt32(insertTaskCommand.ExecuteScalar());
                 }
             }
-        }
-        private int GetLastInsertedReminderId()
-        {
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-
-                string query = "SELECT last_insert_rowid()";
-                using (SQLiteCommand command = new SQLiteCommand(query, connection))
-                {
-                    object result = command.ExecuteScalar();
-                    if (result != null)
-                    {
-                        return Convert.ToInt32(result);
-                    }
-                }
-            }
-
-            return -1; // Return a default value or handle appropriately
         }
 
 
