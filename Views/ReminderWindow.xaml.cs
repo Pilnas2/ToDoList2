@@ -19,6 +19,9 @@ namespace ToDoList2.Views
     /// </summary>
     public partial class ReminderWindow : Window
     {
+        public delegate void SelectedDateTimeEventHandler(object sender, DateTime selectedDateTime);
+        public event SelectedDateTimeEventHandler SelectedDateTimeChanged;
+        public string SelectedDateTime { get; private set; }
         private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
         public DateTime SelectedDate { get; set; }
         public List<int> Hours { get; set; }
@@ -40,10 +43,8 @@ namespace ToDoList2.Views
                 Minutes.Add(i);
             }
 
-            // Set default selected date
             SelectedDate = DateTime.Now.Date;
 
-            // Set DataContext to this window (for data binding)
             DataContext = this;
         }
         private void OnGetTimeClick(object sender, RoutedEventArgs e)
@@ -72,7 +73,9 @@ namespace ToDoList2.Views
                 }
                 else
                 {
-                    MessageBox.Show($"Připomínka nastavena na: {selectedDateTime.ToString("yyyy-MM-dd HH:mm:ss")}");
+                    SelectedDateTime = selectedDateTime.ToString("dd-MM-yyyy HH:mm");
+                    OnSelectedDateTimeChanged(selectedDateTime);
+                    MessageBox.Show($"Připomínka nastavena na: {selectedDateTime.ToString("dd-MM-yyyy HH:mm")}");
                     Close();
                 }
             }
@@ -80,6 +83,14 @@ namespace ToDoList2.Views
             {
                 MessageBox.Show("Prosím zadejte platné datum");
             }
+        }
+        protected virtual void OnSelectedDateTimeChanged(DateTime selectedDateTime)
+        {
+            SelectedDateTimeChanged?.Invoke(this, selectedDateTime);
+        }
+        public string GetData()
+        {
+            return SelectedDateTime;
         }
 
     }

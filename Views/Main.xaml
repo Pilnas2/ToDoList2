@@ -48,6 +48,7 @@
                 <DataGridTextColumn Header="Popis" Binding="{Binding Description}" />
                 <DataGridTextColumn Header="Datum splnění" Binding="{Binding DueDate}" />
                 <DataGridTextColumn Header="Kategorie" Binding="{Binding Category_id}" />
+                <DataGridTextColumn Header="Kategorie název" Binding="{Binding Category.Name}" />
                 <DataGridTextColumn Header="Stav" Binding="{Binding IsCompleted}" />
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" Visibility="Hidden" />
             </DataGrid.Columns>

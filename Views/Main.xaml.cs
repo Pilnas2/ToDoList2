@@ -23,11 +23,10 @@ namespace ToDoList2.Views
     /// </summary>
     public partial class Main : Window
     {
-
-
+        private int lastInsertedTaskId;
+        DateTime selectedDateTimeFromReminders;
         private ObservableCollection<ToDoItems> todoList;
         private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
-        private string customFormat = "dd.MM.yyyy HH:mm";
         public Main()
         {
             InitializeComponent();
@@ -75,7 +74,6 @@ namespace ToDoList2.Views
                         });
                     }
                 }
-
             }
 
         }
@@ -113,8 +111,7 @@ namespace ToDoList2.Views
 
         private string GetCategoryNameById(int categoryId)
         {
-            string categoryName = "Všechny"; // Pokud kategorie není nalezena, výchozí hodnota je prázdný řetězec
-
+            string categoryName = "";
             string selectCategoryQuery = "SELECT Name FROM Categories WHERE id = @categoryId";
             using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
@@ -178,8 +175,6 @@ namespace ToDoList2.Views
                 descriptionTextBox.Text = selectedTask.Description;
                 categoryComboBox1.ItemsSource = LoadCategoriesFromDatabase();
                 categoryComboBox1.SelectedItem = categoryComboBox1.Items.OfType<Categories>().FirstOrDefault(category => category.Id == selectedTask.Category_id);
-
-
             }
             else
             {
@@ -191,16 +186,19 @@ namespace ToDoList2.Views
         {
             ReminderWindow reminderWindow = new ReminderWindow();
             reminderWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            reminderWindow.SelectedDateTimeChanged += RemindersWindow_SelectedDateTimeChanged;
             reminderWindow.Show();
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
         {
             ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+            ReminderWindow reminderWindow = new ReminderWindow();
+            DateTime datum = selectedDateTimeFromReminders;
 
             if (string.IsNullOrWhiteSpace(titleTextBox.Text) || string.IsNullOrWhiteSpace(descriptionTextBox.Text) || datePicker.SelectedDate == null || categoryComboBox1.SelectedItem == null)
             {
-                MessageBox.Show("Please fill in all required fields.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Prosím vyplňte všechny položky.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -210,6 +208,7 @@ namespace ToDoList2.Views
                 selectedTask.Description = descriptionTextBox.Text;
                 selectedTask.Category_id = ((Categories)categoryComboBox1.SelectedItem).Id;
                 selectedTask.DueDate = datePicker.SelectedDate;
+                //reminderWindow.reminderDatePicker = reminderDatePicker.SelectedDate;
 
                 UpdateTaskInDatabase(selectedTask);
                 RefreshData();
@@ -227,7 +226,31 @@ namespace ToDoList2.Views
 
                 todoList.Add(newTask);
                 InsertTaskToDatabase(newTask);
+                if (selectedDateTimeFromReminders != default(DateTime))
+                {
+                    InsertReminderToDatabase(lastInsertedTaskId, selectedDateTimeFromReminders);
+                }
                 RefreshData();
+            }
+        }
+        private void InsertReminderToDatabase(DateTime reminderDateTime)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string insertReminderQuery = "INSERT INTO Reminders (reminder_date_time) " +
+                                             "VALUES (@reminderDateTime);";
+
+                using (SQLiteCommand insertReminderCommand = new SQLiteCommand(insertReminderQuery, connection))
+                {
+                    insertReminderCommand.Parameters.AddWithValue("@reminderDateTime", reminderDateTime);
+
+                    insertReminderCommand.ExecuteNonQuery();
+                }
+
+                // Get the last inserted reminder ID
+                lastInsertedReminderId = GetLastInsertedReminderId();
             }
         }
 
@@ -260,8 +283,10 @@ namespace ToDoList2.Views
             {
                 connection.Open();
 
-                string insertTaskQuery = "INSERT INTO Tasks (title, description, due_date, category_id, is_completed) " +
-                                        "VALUES (@title, @description, @dueDate, @categoryId, @isCompleted)";
+                string insertTaskQuery = "INSERT INTO Tasks (title, description, due_date, category_id, is_completed, reminder_id) " +
+                                        "VALUES (@title, @description, @dueDate, @categoryId, @isCompleted, @reminderId); " +
+                                        "SELECT last_insert_rowid();";
+
                 using (SQLiteCommand insertTaskCommand = new SQLiteCommand(insertTaskQuery, connection))
                 {
                     insertTaskCommand.Parameters.AddWithValue("@title", task.Title);
@@ -270,10 +295,34 @@ namespace ToDoList2.Views
                     insertTaskCommand.Parameters.AddWithValue("@categoryId", task.Category_id);
                     insertTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
 
-                    insertTaskCommand.ExecuteNonQuery();
+                    // Assuming you have a variable for reminderId
+                    insertTaskCommand.Parameters.AddWithValue("@reminderId", reminderId);
+
+                    // Execute the query and get the last inserted row ID
+                    lastInsertedTaskId = Convert.ToInt32(insertTaskCommand.ExecuteScalar());
                 }
             }
         }
+        private int GetLastInsertedReminderId()
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string query = "SELECT last_insert_rowid()";
+                using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                {
+                    object result = command.ExecuteScalar();
+                    if (result != null)
+                    {
+                        return Convert.ToInt32(result);
+                    }
+                }
+            }
+
+            return -1; // Return a default value or handle appropriately
+        }
+
 
         private void RefreshData()
         {
@@ -325,6 +374,9 @@ namespace ToDoList2.Views
         {
             RefreshData();
         }
-
+        private void RemindersWindow_SelectedDateTimeChanged(object sender, DateTime selectedDateTime)
+        {
+            selectedDateTimeFromReminders = selectedDateTime;
+        }
     }
 }
