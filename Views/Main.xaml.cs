@@ -69,7 +69,7 @@ namespace ToDoList2.Views
                             Description = description,
                             DueDate = dueDate,
                             IsCompleted = status,
-                            Category_id = category,
+                            CategoryId = category,
                             Id = id
                         });
                     }
@@ -174,7 +174,7 @@ namespace ToDoList2.Views
                 titleTextBox.Text = selectedTask.Title;
                 descriptionTextBox.Text = selectedTask.Description;
                 categoryComboBox1.ItemsSource = LoadCategoriesFromDatabase();
-                categoryComboBox1.SelectedItem = categoryComboBox1.Items.OfType<Categories>().FirstOrDefault(category => category.Id == selectedTask.Category_id);
+                categoryComboBox1.SelectedItem = categoryComboBox1.Items.OfType<Categories>().FirstOrDefault(category => category.Id == selectedTask.CategoryId);
             }
             else
             {
@@ -206,7 +206,7 @@ namespace ToDoList2.Views
             {
                 selectedTask.Title = titleTextBox.Text;
                 selectedTask.Description = descriptionTextBox.Text;
-                selectedTask.Category_id = ((Categories)categoryComboBox1.SelectedItem).Id;
+                selectedTask.CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id;
                 selectedTask.DueDate = datePicker.SelectedDate;
                 //reminderWindow.reminderDatePicker = reminderDatePicker.SelectedDate;
 
@@ -221,15 +221,15 @@ namespace ToDoList2.Views
                     Description = descriptionTextBox.Text,
                     DueDate = datePicker.SelectedDate,
                     IsCompleted = 0,
-                    Category_id = ((Categories)categoryComboBox1.SelectedItem).Id
+                    CategoryId = ((Categories)categoryComboBox1.SelectedItem).Id
                 };
 
                 todoList.Add(newTask);
                 InsertTaskToDatabase(newTask);
-                if (selectedDateTimeFromReminders != default(DateTime))
-                {
-                    InsertReminderToDatabase(lastInsertedTaskId, selectedDateTimeFromReminders);
-                }
+                //if (selectedDateTimeFromReminders != default(DateTime))
+                //{
+                //    InsertReminderToDatabase(lastInsertedTaskId, selectedDateTimeFromReminders);
+                //}
                 RefreshData();
             }
         }
@@ -250,7 +250,7 @@ namespace ToDoList2.Views
                 }
 
                 // Get the last inserted reminder ID
-                lastInsertedReminderId = GetLastInsertedReminderId();
+                //lastInsertedReminderId = GetLastInsertedReminderId();
             }
         }
 
@@ -268,7 +268,7 @@ namespace ToDoList2.Views
                     updateTaskCommand.Parameters.AddWithValue("@title", task.Title);
                     updateTaskCommand.Parameters.AddWithValue("@description", task.Description);
                     updateTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
-                    updateTaskCommand.Parameters.AddWithValue("@categoryId", task.Category_id);
+                    updateTaskCommand.Parameters.AddWithValue("@categoryId", task.CategoryId);
                     updateTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
                     updateTaskCommand.Parameters.AddWithValue("@taskId", task.Id);
 
@@ -292,11 +292,11 @@ namespace ToDoList2.Views
                     insertTaskCommand.Parameters.AddWithValue("@title", task.Title);
                     insertTaskCommand.Parameters.AddWithValue("@description", task.Description);
                     insertTaskCommand.Parameters.AddWithValue("@dueDate", task.DueDate);
-                    insertTaskCommand.Parameters.AddWithValue("@categoryId", task.Category_id);
+                    insertTaskCommand.Parameters.AddWithValue("@categoryId", task.CategoryId);
                     insertTaskCommand.Parameters.AddWithValue("@isCompleted", task.IsCompleted);
 
                     // Assuming you have a variable for reminderId
-                    insertTaskCommand.Parameters.AddWithValue("@reminderId", reminderId);
+                    insertTaskCommand.Parameters.AddWithValue("@reminderId", task.ReminderId);
 
                     // Execute the query and get the last inserted row ID
                     lastInsertedTaskId = Convert.ToInt32(insertTaskCommand.ExecuteScalar());
@@ -363,7 +363,7 @@ namespace ToDoList2.Views
                             Description = description,
                             DueDate = dueDate,
                             IsCompleted = status,
-                            Category_id = category,
+                            CategoryId = category,
                             Id = id
                         });
                     }

@@ -12,7 +12,9 @@ namespace ToDoList2.Model
         public string Title { get; set; }
         public string? Description { get; set; }
         public DateTime? DueDate { get; set; }
-        public int Category_id { get; set; }
+        public int CategoryId { get; set; }
         public int IsCompleted { get; set; }
+        public int ReminderId { get; set; }
+
     }
 }
