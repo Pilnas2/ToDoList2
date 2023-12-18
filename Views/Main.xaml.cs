@@ -223,6 +223,7 @@ namespace ToDoList2.Views
             reminderWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             reminderWindow.SelectedDateTimeChanged += RemindersWindow_SelectedDateTimeChanged;
             reminderWindow.Show();
+            reminderWindow.ResetData();
         }
 
         private void saveButton_Click(object sender, RoutedEventArgs e)
@@ -252,10 +253,11 @@ namespace ToDoList2.Views
             else
             {
                 int reminderId = 0;
-                if (selectedDateTimeFromReminders != default(DateTime))
+                if (selectedDateTimeFromReminders != DateTime.MinValue)
                 {
                     reminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
                 }
+
                 ToDoItems newTask = new ToDoItems
                 {
                     Title = titleTextBox.Text,
@@ -267,8 +269,6 @@ namespace ToDoList2.Views
                 };
 
                 todoList.Add(newTask);
-
-                newTask.ReminderId = InsertReminderToDatabase(selectedDateTimeFromReminders);
 
                 InsertTaskToDatabase(newTask);
                 RefreshData();

@@ -22,7 +22,6 @@ namespace ToDoList2.Views
         public delegate void SelectedDateTimeEventHandler(object sender, DateTime selectedDateTime);
         public event SelectedDateTimeEventHandler SelectedDateTimeChanged;
         public string SelectedDateTime { get; private set; }
-        private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
         public DateTime SelectedDate { get; set; }
         public List<int> Hours { get; set; }
         public List<int> Minutes { get; set; }
@@ -88,6 +87,13 @@ namespace ToDoList2.Views
         {
             SelectedDateTimeChanged?.Invoke(this, selectedDateTime);
         }
-
+        public void ResetData()
+        {
+            SelectedDate = DateTime.Now.Date;
+            SelectedDateTime = null;
+            hourComboBox.SelectedIndex = 0;
+            minuteComboBox.SelectedIndex = 0;
+            reminderDatePicker.SelectedDate = null;
+        }
     }
 }
