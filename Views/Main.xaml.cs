@@ -399,5 +399,21 @@ namespace ToDoList2.Views
         {
             selectedDateTimeFromReminders = selectedDateTime;
         }
+
+        private void editCategoriesButton_Click(object sender, RoutedEventArgs e)
+        {
+            CategoryWindow categoryWindow = new CategoryWindow();
+            categoryWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            categoryWindow.Closing += CategoryWindow_Closing;
+            categoryWindow.Show();
+        }
+        private void CategoryWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            RefreshData();
+        }
+        private void categoryComboBox1_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RefreshData();
+        }
     }
 }

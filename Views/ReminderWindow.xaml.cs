@@ -75,6 +75,7 @@ namespace ToDoList2.Views
                     SelectedDateTime = selectedDateTime.ToString("dd-MM-yyyy HH:mm");
                     OnSelectedDateTimeChanged(selectedDateTime);
                     MessageBox.Show($"Připomínka nastavena na: {selectedDateTime.ToString("dd-MM-yyyy HH:mm")}");
+                    ResetData();
                     Close();
                 }
             }
@@ -89,7 +90,7 @@ namespace ToDoList2.Views
         }
         public void ResetData()
         {
-            SelectedDate = DateTime.Now.Date;
+            SelectedDate = DateTime.MinValue;
             SelectedDateTime = null;
             hourComboBox.SelectedIndex = 0;
             minuteComboBox.SelectedIndex = 0;
