@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ToDoList2.Model;
+using Windows.UI.Notifications;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace ToDoList2.Views
 {
@@ -24,6 +26,7 @@ namespace ToDoList2.Views
     public partial class Main : Window
     {
         private int lastInsertedTaskId;
+        private System.Timers.Timer reminderTimer;
         DateTime selectedDateTimeFromReminders;
         private ObservableCollection<ToDoItems> todoList;
         private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
@@ -33,7 +36,9 @@ namespace ToDoList2.Views
             todoList = new ObservableCollection<ToDoItems>();
             todoListGridView.ItemsSource = todoList;
             MainWindow_Load(null, null);
-
+            reminderTimer = new System.Timers.Timer(60000);
+            reminderTimer.Elapsed += ReminderTimer_Elapsed;
+            reminderTimer.Start();
         }
 
         public void MainWindow_Load(object sender, EventArgs e)
@@ -414,6 +419,111 @@ namespace ToDoList2.Views
         private void categoryComboBox1_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             RefreshData();
+        }
+
+        private void selectCompletedButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+
+            if (selectedTask != null)
+            {
+                selectedTask.IsCompleted = 1;
+
+                UpdateTaskCompletionStatusInDatabase(selectedTask.Id, 1);
+
+                RefreshData();
+            }
+            else
+            {
+                MessageBox.Show("Vyberte položku");
+            }
+        }
+
+        private void UpdateTaskCompletionStatusInDatabase(int taskId, int isCompleted)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string updateCompletionStatusQuery = "UPDATE Tasks SET is_completed = @isCompleted WHERE id = @taskId";
+
+                using (SQLiteCommand updateCompletionStatusCommand = new SQLiteCommand(updateCompletionStatusQuery, connection))
+                {
+                    updateCompletionStatusCommand.Parameters.AddWithValue("@isCompleted", isCompleted);
+                    updateCompletionStatusCommand.Parameters.AddWithValue("@taskId", taskId);
+
+                    updateCompletionStatusCommand.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private void selectIncopletedButton_Click(object sender, RoutedEventArgs e)
+        {
+            ToDoItems selectedTask = todoListGridView.SelectedItem as ToDoItems;
+
+            if (selectedTask != null)
+            {
+                selectedTask.IsCompleted = 0;
+
+                UpdateTaskCompletionStatusInDatabase(selectedTask.Id, 0);
+
+                RefreshData();
+            }
+            else
+            {
+                MessageBox.Show("Vyberte položku");
+            }
+        }
+        private void ReminderTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            CheckReminders();
+        }
+        private void CheckReminders()
+        {
+            DateTime currentDateTime = DateTime.Now;
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+
+                string selectRemindersQuery = "SELECT id, reminder_date_time FROM Reminders";
+                using (SQLiteCommand selectRemindersCommand = new SQLiteCommand(selectRemindersQuery, connection))
+                {
+                    using (SQLiteDataReader reader = selectRemindersCommand.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int reminderId = Convert.ToInt32(reader["id"]);
+                            DateTime reminderDateTime = Convert.ToDateTime(reader["reminder_date_time"]);
+
+                            if (currentDateTime.Year == reminderDateTime.Year &&
+                                currentDateTime.Month == reminderDateTime.Month &&
+                                currentDateTime.Day == reminderDateTime.Day &&
+                                currentDateTime.Hour == reminderDateTime.Hour &&
+                                currentDateTime.Minute == reminderDateTime.Minute)
+                            {
+                                // Trigger toast notification
+                                ShowToastNotification($"Reminder: {reminderId}");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ShowToastNotification(string message)
+        {
+            // Use ToastContentBuilder to create a toast notification
+            var content = new ToastContentBuilder()
+                .AddText("Reminder")
+                .AddText(message)
+                .GetToastContent();
+
+            // Create the toast notification
+            var toast = new ToastNotification(content.GetXml());
+
+            // Show the toast notification
+            DesktopNotificationManagerCompat.CreateToastNotifier().Show(toast);
         }
     }
 }

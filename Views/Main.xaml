@@ -41,7 +41,7 @@
         <DataGrid x:Name="todoListGridView" Margin="730,231,50,65" AutoGenerateColumns="False"
                   ItemsSource="{Binding ToDoList}">
             <DataGrid.Background>
-                <SolidColorBrush Color="White" Opacity="0.3"/>
+                <SolidColorBrush Color="#FFAC02FF" Opacity="0.3"/>
             </DataGrid.Background>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Název" Binding="{Binding Title}" />
@@ -57,6 +57,8 @@
         </DataGrid>
         <Button x:Name="reminderButton" Content="Připomínka" HorizontalAlignment="Left" Margin="130,703,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.101,0.127" Width="75" Click="reminderButton_Click"/>
         <Button x:Name="editCategoriesButton" Content="Upravit Kategorie" HorizontalAlignment="Left" Margin="214,358,0,0" VerticalAlignment="Top" Click="editCategoriesButton_Click"/>
+        <Button x:Name="selectCompletedButton" Content="Splněno" HorizontalAlignment="Left" Margin="587,368,0,0" VerticalAlignment="Top" Width="74" Click="selectCompletedButton_Click"/>
+        <Button x:Name="selectIncopletedButton" Content="Nesplněno" HorizontalAlignment="Left" Margin="587,402,0,0" VerticalAlignment="Top" Width="74" Click="selectIncopletedButton_Click"/>
 
     </Grid>
 </Window>
