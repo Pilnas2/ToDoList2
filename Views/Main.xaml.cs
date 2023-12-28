@@ -15,8 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using ToDoList2.Model;
-using Windows.UI.Notifications;
-using Microsoft.Toolkit.Uwp.Notifications;
+
 
 namespace ToDoList2.Views
 {
@@ -29,16 +28,13 @@ namespace ToDoList2.Views
         private System.Timers.Timer reminderTimer;
         DateTime selectedDateTimeFromReminders;
         private ObservableCollection<ToDoItems> todoList;
-        private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
+        private string connectionString = "Data Source=todoList.db";
         public Main()
         {
             InitializeComponent();
             todoList = new ObservableCollection<ToDoItems>();
             todoListGridView.ItemsSource = todoList;
             MainWindow_Load(null, null);
-            reminderTimer = new System.Timers.Timer(60000);
-            reminderTimer.Elapsed += ReminderTimer_Elapsed;
-            reminderTimer.Start();
         }
 
         public void MainWindow_Load(object sender, EventArgs e)
@@ -473,57 +469,6 @@ namespace ToDoList2.Views
             {
                 MessageBox.Show("Vyberte položku");
             }
-        }
-        private void ReminderTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            CheckReminders();
-        }
-        private void CheckReminders()
-        {
-            DateTime currentDateTime = DateTime.Now;
-
-            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
-            {
-                connection.Open();
-
-                string selectRemindersQuery = "SELECT id, reminder_date_time FROM Reminders";
-                using (SQLiteCommand selectRemindersCommand = new SQLiteCommand(selectRemindersQuery, connection))
-                {
-                    using (SQLiteDataReader reader = selectRemindersCommand.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            int reminderId = Convert.ToInt32(reader["id"]);
-                            DateTime reminderDateTime = Convert.ToDateTime(reader["reminder_date_time"]);
-
-                            if (currentDateTime.Year == reminderDateTime.Year &&
-                                currentDateTime.Month == reminderDateTime.Month &&
-                                currentDateTime.Day == reminderDateTime.Day &&
-                                currentDateTime.Hour == reminderDateTime.Hour &&
-                                currentDateTime.Minute == reminderDateTime.Minute)
-                            {
-                                // Trigger toast notification
-                                ShowToastNotification($"Reminder: {reminderId}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private void ShowToastNotification(string message)
-        {
-            // Use ToastContentBuilder to create a toast notification
-            var content = new ToastContentBuilder()
-                .AddText("Reminder")
-                .AddText(message)
-                .GetToastContent();
-
-            // Create the toast notification
-            var toast = new ToastNotification(content.GetXml());
-
-            // Show the toast notification
-            DesktopNotificationManagerCompat.CreateToastNotifier().Show(toast);
         }
     }
 }
