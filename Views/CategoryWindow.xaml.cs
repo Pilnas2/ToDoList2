@@ -21,7 +21,7 @@ namespace ToDoList2.Views
     /// </summary>
     public partial class CategoryWindow : Window
     {
-        private string connectionString = "Data Source=C:\\Skola\\C# II\\ToDoList2\\todoList.db";
+        private string connectionString = "Data Source=todoList.db";
 
         public CategoryWindow()
         {
